@@ -2,7 +2,6 @@ import { Component, HostListener } from '@angular/core';
 import snarkdown from 'snarkdown';
 import { Step, RECOMMENDATIONS } from './recommendations';
 import { Location } from '@angular/common';
-import { AnalyticsService } from './analytics.service';
 import { getLocalizedAction, currentLocale } from './localization';
 import { I18nPipe } from './i18n.pipe';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -80,7 +79,6 @@ export class AppComponent {
 
   constructor(
     public location: Location,
-    public track: AnalyticsService,
     public i18Service: I18nPipe,
     private clipboard: Clipboard
   ) {

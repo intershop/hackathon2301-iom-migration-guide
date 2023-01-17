@@ -44,14 +44,14 @@
           <h3>{{'Angular versions'|i18n}}</h3>
           {{'From'|i18n}} v.
           <mat-form-field appearance="outline">
-            <select (change)="from = getVersion($event.target.value); track.send('setting-from','v'+$event.target.value); showUpdatePath()" placeholder="from" matNativeControl>
+            <select (change)="from = getVersion($event.target.value); showUpdatePath()" placeholder="from" matNativeControl>
               <option *ngFor="let version of versions" [value]="version.name" [selected]="version.name === from.name">{{version.name}}</option>
             </select>
           </mat-form-field>
 
           <span style="white-space: nowrap">{{'To'|i18n}} v.
           <mat-form-field appearance="outline">
-            <select (change)="to = getVersion($event.target.value);  track.send('setting-to','v'+$event.target.value); showUpdatePath()" placeholder="to" matNativeControl>
+            <select (change)="to = getVersion($event.target.value); showUpdatePath()" placeholder="to" matNativeControl>
               <option *ngFor="let version of versions" [value]="version.name" [selected]="version.name === to.name">{{version.name}}</option>
             </select>
           </mat-form-field>
@@ -72,7 +72,7 @@
 
           <h3>{{'Application complexity'|i18n}}</h3>
           <ng-container>
-              <mat-button-toggle-group (change)="level = $event.value; track.send('setting-complexity',$event.value); showUpdatePath()" [value]="level" style="margin-bottom:16px;">
+              <mat-button-toggle-group (change)="level = $event.value; showUpdatePath()" [value]="level" style="margin-bottom:16px;">
                 <mat-button-toggle [value]="1">{{'Basic'|i18n}}</mat-button-toggle>
                 <mat-button-toggle [value]="2">{{'Medium'|i18n}}</mat-button-toggle>
                 <mat-button-toggle [value]="3">{{'Advanced'|i18n}}</mat-button-toggle>
@@ -85,7 +85,7 @@
           <h3>{{'Other dependencies'|i18n}}</h3>
           <ng-container *ngFor="let option of optionList">
             <p>
-              <mat-checkbox (change)="options[option.id] = $event.checked; track.send('setting-'+option.name,$event.checked); showUpdatePath()" [checked]="options[option.id]">{{'I use'|i18n}} {{option.name}} {{option.description}}</mat-checkbox>
+              <mat-checkbox (change)="options[option.id] = $event.checked; showUpdatePath()" [checked]="options[option.id]">{{'I use'|i18n}} {{option.name}} {{option.description}}</mat-checkbox>
             </p>
             <mat-grid-tile [colspan]="2"></mat-grid-tile>
           </ng-container>
