@@ -13,8 +13,9 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
 import { Location, LocationStrategy, PathLocationStrategy } from '@angular/common';
-
-import './locales';
+import { HttpClientModule } from '@angular/common/http';
+import {MatChipsModule} from '@angular/material/chips'; 
+import { MatTableModule } from '@angular/material/table';
 import { I18nPipe } from './i18n.pipe';
 
 @NgModule({
@@ -32,6 +33,9 @@ import { I18nPipe } from './i18n.pipe';
     MatProgressBarModule,
     MatButtonToggleModule,
     MatMenuModule,
+    HttpClientModule,
+    MatChipsModule,
+    MatTableModule
   ],
   providers: [Location, { provide: LocationStrategy, useClass: PathLocationStrategy }],
   bootstrap: [AppComponent],

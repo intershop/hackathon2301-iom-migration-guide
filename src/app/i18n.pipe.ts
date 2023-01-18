@@ -1,5 +1,4 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { currentLocale, getLocalizedLabel } from './localization';
 
 /**
  * Re-use the step translation system for system UI
@@ -11,6 +10,8 @@ import { currentLocale, getLocalizedLabel } from './localization';
 })
 export class I18nPipe implements PipeTransform {
   transform(value: string): string {
-    return getLocalizedLabel(currentLocale.locale, value);
+    //return getLocalizedLabel(currentLocale.locale, value);
+    // noop for now
+    return value;
   }
 }

@@ -1,0 +1,93 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "type": "array",
+    "title": "Migration Schema",
+    "items": {
+        "$ref": "#/definitions/MigrationTarget"
+    },
+    "definitions": {
+        "MigrationTarget": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "version": {
+                    "type": "string"
+                },
+                "requireDowntime": {
+                    "type": "boolean"
+                },
+                "wildflyVersion": {
+                    "type": "string"
+                },
+                "postgresqlVersions": {
+                    "type": "string"
+                },
+                "phases": {
+                    "$ref": "#/definitions/MigrationPhases"
+                }
+            },
+            "required": [
+                "phases",
+                "version"
+            ],
+            "title": "MigrationTarget"
+        },
+        "MigrationPhases": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "pre": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MigrationStep"
+                    }
+                },
+                "during": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MigrationStep"
+                    }
+                },
+                "after": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/MigrationStep"
+                    }
+                }
+            },
+            "title": "MigrationPhases"
+        },
+        "MigrationStep": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "title": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "instructions": {
+                    "type": "string"
+                },
+                "component": {
+                    "type": "string"
+                },
+                "replaces": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "component",
+                "id",
+                "instructions",
+                "title"
+            ],
+            "title": "MigrationStep"
+        },
+        "Component": {
+            "type": "string",
+            "enum": ["database", "archetype", "dependencies", "platform", "devenv"]
+        }
+    }
+}

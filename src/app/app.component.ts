@@ -1,97 +1,67 @@
-import { Component, HostListener } from '@angular/core';
-import snarkdown from 'snarkdown';
-import { Step, RECOMMENDATIONS } from './recommendations';
+import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { MigrationTarget, MigrationStep } from './models';
 import { Location } from '@angular/common';
-import { getLocalizedAction, currentLocale } from './localization';
-import { I18nPipe } from './i18n.pipe';
 import { Clipboard } from '@angular/cdk/clipboard';
+import  { Pair, parse as parseYaml }  from 'yaml';
+import  { HttpClient } from '@angular/common/http';
+import { SemVer, compare as semverCmp } from 'semver';
+import { MatTable } from '@angular/material/table';
+import { forkJoin, Observable, Subscription } from 'rxjs';
+import * as MarkdownIt from 'markdown-it';
+import { RouteConfigLoadEnd } from '@angular/router';
 
-interface Option {
-  id: string;
-  name: string;
-  description: string;
+
+interface Dependency {
+  component: string;
+  version: string;
 }
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  providers: [I18nPipe]
+  providers: []
 })
 export class AppComponent {
   title = 'Angular Update Guide';
 
-  level = 1;
-  options: Record<string, boolean> = {
-    ngUpgrade: false,
-    material: false,
-    windows: isWindows(),
-  };
-  optionList: Option[] = [];
-  packageManager: 'npm install' | 'yarn add' = 'npm install';
 
-  beforeRecommendations: Step[] = [];
-  duringRecommendations: Step[] = [];
-  afterRecommendations: Step[] = [];
+  versionTable: Dependency[] = [];
+  @ViewChild(MatTable)
+  requirementsTable: MatTable<Dependency>;
 
-  versions = [
-    { name: '16.0', number: 1600 },
-    { name: '15.0', number: 1500 },
-    { name: '14.0', number: 1400 },
-    { name: '13.0', number: 1300 },
-    { name: '12.0', number: 1200 },
-    { name: '11.0', number: 1100 },
-    { name: '10.2', number: 1020 },
-    { name: '10.1', number: 1010 },
-    { name: '10.0', number: 1000 },
-    { name: '9.1', number: 910 },
-    { name: '9.0', number: 900 },
-    { name: '8.2', number: 820 },
-    { name: '8.1', number: 810 },
-    { name: '8.0', number: 800 },
-    { name: '7.2', number: 720 },
-    { name: '7.1', number: 710 },
-    { name: '7.0', number: 700 },
-    { name: '6.1', number: 610 },
-    { name: '6.0', number: 600 },
-    { name: '5.2', number: 520 },
-    { name: '5.1', number: 510 },
-    { name: '5.0', number: 500 },
-    { name: '4.4', number: 440 },
-    { name: '4.3', number: 430 },
-    { name: '4.2', number: 420 },
-    { name: '4.1', number: 410 },
-    { name: '4.0', number: 400 },
-    { name: '2.4', number: 204 },
-    { name: '2.3', number: 203 },
-    { name: '2.2', number: 202 },
-    { name: '2.1', number: 201 },
-    { name: '2.0', number: 200 },
+  displayedColumns: string[] = ['component', 'version'];
+  md: MarkdownIt = new MarkdownIt();
+
+  globalRecomms: MigrationTarget;
+  newRecomms: MigrationTarget[] = [];
+  allInstructions: MigrationTarget = new MigrationTarget();
+  stepsToSkip: string[] = [];
+  parameterMap: any = {};
+
+  versions: SemVer[] = [
+    ver('4.5.0'),
+    ver('4.4.0'),
+    ver('3.5.0'),
+    ver('3.3.0')
   ];
-  from = this.versions.find((version) => version.name === '14.0');
-  to = this.versions.find((version) => version.name === '15.0');
-  futureVersion = 1600
+  from = this.versions[1];
+  to = this.versions[0];
+//  futureVersion = 1600
   /**
    * Only save the locale in the URL if it was already there, or the user changed it
    */
   saveLocale = false;
 
-  steps: Step[] = RECOMMENDATIONS;
 
   constructor(
     public location: Location,
-    public i18Service: I18nPipe,
-    private clipboard: Clipboard
+    //public i18Service: I18nPipe,
+    private clipboard: Clipboard,
+    httpClient: HttpClient
   ) {
-    this.optionList =  [
-      { id: 'ngUpgrade', name: 'ngUpgrade', description: i18Service.transform('to combine AngularJS & Angular') },
-      { id: 'material', name: 'Angular Material', description: '' },
-      { id: 'windows', name: 'Windows', description: '' },
-    ];
-
     const searchParams = new URLSearchParams(window.location.search);
     // Detect settings in URL
-    this.level = parseInt(searchParams.get('l'), 10) || this.level;
-    currentLocale.locale = searchParams.get('locale') || navigator.language;
+    //currentLocale.locale = searchParams.get('locale') || navigator.language;
     if (searchParams.get('locale')) {
       this.saveLocale = true;
     }
@@ -100,10 +70,20 @@ export class AppComponent {
     // Detect versions of from and to
     if (versions) {
       const [from, to] = versions.split('-');
-      this.from = this.versions.find((version) => version.name === from);
-      this.to = this.versions.find((version) => version.name === to);
-      this.showUpdatePath();
+      this.from = this.versions.find((version) => version.version === from);
+      this.to = this.versions.find((version) => version.version === to);
     }
+
+    forkJoin([httpClient.get('assets/migrate.yaml', {responseType: 'text'}),
+    httpClient.get('assets/global_steps.yaml', {responseType: 'text'})]).subscribe(([migrateSteps, globalMigrateSteps]) => {
+      this.newRecomms = <MigrationTarget[]>parseYaml(migrateSteps);
+      // sort in ascending order
+      this.newRecomms.sort((a,b) => semverCmp(a.version, b.version));
+      this.globalRecomms = (<MigrationTarget[]>parseYaml(globalMigrateSteps))[0];
+      this.showUpdatePath();
+    });
+
+
   }
 
   @HostListener('click', ['$event.target'])
@@ -113,31 +93,101 @@ export class AppComponent {
     }
   }
 
+  renderTarget(migrationTarget: MigrationTarget) {
+    this.renderSteps(migrationTarget.phases.pre);
+    this.renderSteps(migrationTarget.phases.during);
+    this.renderSteps(migrationTarget.phases.after);
+  }
+
+  renderSteps(steps: MigrationStep[]) {
+    if(steps == null || steps.length < 1) {
+      return;
+    }
+    steps.forEach(step => {
+      console.log(this.replaceVariables(step.instructions));
+      step.renderedInstructions = this.md.render(this.replaceVariables(step.instructions));
+    })
+  }
+
   showUpdatePath() {
-    this.beforeRecommendations = [];
-    this.duringRecommendations = [];
-    this.afterRecommendations = [];
+    this.allInstructions = new MigrationTarget();
+    this.stepsToSkip = [];
+    this.versionTable = [];
 
     // Refuse to generate recommendations for downgrades
-    if (this.to.number < this.from.number) {
+    if (this.to.compare(this.from) < 0) {
       alert('We do not support downgrading versions of Angular.');
       return;
     }
 
-    const labelTitle = this.i18Service.transform('Guide to update your Angular application');
-    const labelBasic = this.i18Service.transform('basic applications');
-    const labelMedium = this.i18Service.transform('medium applications');
-    const labelAdvanced = this.i18Service.transform('advanced applications');
+    //const labelTitle = this.i18Service.transform('Guide to update your Angular application');
+    const labelTitle = 'Guide to update IOM';
 
     this.title =
-    `${labelTitle} v${this.from.name} -> v${this.to.name}
-    ${this.i18Service.transform('for')}
-    ${
-      this.level < 2 ?
-        labelBasic : this.level < 3 ?
-          labelMedium : labelAdvanced
-    }`;
+    `${labelTitle} v${this.from.version} -> v${this.to.version}`;
+    let curVersion: SemVer;
 
+    // FIXME refactor...
+
+    if(this.globalRecomms.phases.pre)
+    {
+      this.allInstructions.phases.pre.push(...this.globalRecomms.phases.pre);
+    }
+
+    if(this.globalRecomms.phases.during)
+    {
+      this.allInstructions.phases.during.push(...this.globalRecomms.phases.during);
+    }
+
+    if(this.globalRecomms.phases.after)
+    {
+      this.allInstructions.phases.after.push(...this.globalRecomms.phases.after);
+    }
+
+    
+    for (const migrationVersion of this.newRecomms) {
+      curVersion = new SemVer(migrationVersion.version);
+      if(curVersion.compare(this.from) <= 0) {
+        continue;
+      }
+      if(curVersion.compare(this.to) > 0) {
+        break;
+      }
+
+      this.allInstructions.updateRequireDowntime(migrationVersion.requireDowntime);
+      this.allInstructions.postgresqlVersions = migrationVersion.postgresqlVersions;
+      this.allInstructions.wildflyVersion = migrationVersion.wildflyVersion;
+
+      let arraysToSort: Pair<MigrationStep[], MigrationStep[]>[] = [];
+
+      arraysToSort.push(new Pair(migrationVersion.phases.pre, this.allInstructions.phases.pre), 
+        new Pair(migrationVersion.phases.during, this.allInstructions.phases.during), 
+        new Pair(migrationVersion.phases.after, this.allInstructions.phases.after));
+
+      arraysToSort.forEach(pair => {
+        if(pair.key != null) {
+          pair.key.forEach(step => {
+            pair.value.push(step);
+            if(step.replaces != null) {
+              this.stepsToSkip.push(step.replaces);
+            }
+            step.renderedInstructions = this.md.render(this.replaceVariables(step.instructions));
+          })  
+        }
+      });
+    }
+    this.versionTable.push(<Dependency>{component: 'PostgreSQL', version: this.allInstructions.postgresqlVersions},
+          <Dependency>{component: 'WildFly', version: this.allInstructions.wildflyVersion});
+    this.parameterMap.iomToVersion = this.to.version;
+    this.parameterMap.wildflyVersion = this.allInstructions.wildflyVersion;
+    this.renderTarget(this.globalRecomms);
+
+    console.log(this.allInstructions)
+
+    //this.requirementsTable.renderRows();
+
+
+/*
     // Find applicable steps and organize them into before, during, and after upgrade
     for (const step of this.steps) {
       if (step.level <= this.level && step.necessaryAsOf > this.from.number) {
@@ -175,21 +225,15 @@ export class AppComponent {
         } else {
         }
       }
-    }
+    }*/
 
     // Update the URL so users can link to this transition
     const searchParams = new URLSearchParams();
-    if (currentLocale.locale && this.saveLocale) {
-      searchParams.set('locale', currentLocale.locale);
-    }
-    if (this.level >= 2) {
-      searchParams.set('l', `${this.level}`);
-    }
-    searchParams.set('v', `${this.from.name}-${this.to.name}`);
+    //if (currentLocale.locale && this.saveLocale) {
+    //  searchParams.set('locale', currentLocale.locale);
+    //}
+    searchParams.set('v', `${this.from.version}-${this.to.version}`);
     this.location.replaceState('', searchParams.toString());
-
-    // Tell everyone how to upgrade for v6 or earlier
-    this.renderPreV6Instructions();
   }
 
   getAdditionalDependencies(version: number) {
@@ -211,79 +255,20 @@ export class AppComponent {
     }
   }
 
-  renderPreV6Instructions() {
-    let upgradeStep;
-    const isWindows = /win/i.test(navigator.platform);
-    const additionalDeps = this.getAdditionalDependencies(this.to.number);
-    const angularVersion = this.getAngularVersion(this.to.number);
-    const angularPackages = [
-      'animations',
-      'common',
-      'compiler',
-      'compiler-cli',
-      'core',
-      'forms',
-      'http',
-      'platform-browser',
-      'platform-browser-dynamic',
-      'platform-server',
-      'router',
-    ];
-
-    // Provide npm/yarn instructions for versions before 6
-    if (this.to.number < 600) {
-      const actionMessage = `Update all of your dependencies to the latest Angular and the right version of TypeScript.`;
-
-      if (isWindows) {
-        const packages =
-          angularPackages.map((packageName) => `@angular/${packageName}@${angularVersion}`).join(' ') +
-          ' ' +
-          additionalDeps;
-
-        upgradeStep = {
-          step: 'General Update',
-          action: `${actionMessage}
-          If you are using Windows, you can use:
-
-\`${this.packageManager} ${packages}\``,
-        };
-      } else {
-        const packages = `@angular/{${angularPackages.join(',')}}@${angularVersion} ${additionalDeps}`;
-        upgradeStep = {
-          step: 'General update',
-          action: `${actionMessage}
-          If you are using Linux/Mac, you can use:
-
-\`${this.packageManager} ${packages}\``,
-        };
-      }
-
-      // Npm installs typescript wrong in v5, let's manually specify
-      // https://github.com/npm/npm/issues/16813
-      if (this.packageManager === 'npm install' && this.to.number === 500) {
-        upgradeStep.action += `
-
-\`npm install typescript@2.4.2 --save-exact\``;
-      }
-
-      upgradeStep.renderedStep = snarkdown(upgradeStep.action);
-
-      this.duringRecommendations.push(upgradeStep);
-    }
-  }
 
   replaceVariables(action: string) {
     let newAction = action;
-    newAction = newAction.replace(
-      '${packageManagerGlobalInstall}',
-      this.packageManager === 'npm install' ? 'npm install -g' : 'yarn global add'
-    );
-    newAction = newAction.replace('${packageManagerInstall}', this.packageManager);
+    newAction = newAction.replace(/\${\w+}/g, rpl => this.replacer(rpl, this.parameterMap));
     return newAction;
   }
 
+  replacer(substring: string, parameterMap: any) {
+    let key = substring.match(/\${(\w+)}/)[1];
+    return parameterMap[key];
+  }
+
   getVersion(newVersion: string) {
-    return this.versions.find((version) => version.name === newVersion);
+    return this.versions.find((version) => version.version === newVersion);
   }
 
   log(x) {
@@ -292,14 +277,14 @@ export class AppComponent {
   }
 
   setLocale(locale: string) {
-    currentLocale.locale = locale;
+    //currentLocale.locale = locale;
     this.saveLocale = true;
     this.showUpdatePath();
   }
 }
 
-/** Whether or not the user is running on a Windows OS. */
-function isWindows(): boolean {
-  const platform = navigator.platform.toLowerCase();
-  return platform.includes('windows') || platform.includes('win32');
+
+// convenience
+function ver(version: string): SemVer {
+  return new SemVer(version);
 }

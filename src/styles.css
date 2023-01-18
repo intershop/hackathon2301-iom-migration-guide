@@ -56,7 +56,8 @@ mat-toolbar .page-title {
 code {
   font-size: 14px;
   line-height: 1.5;
-  padding: 0 6px;
+  padding: 10px 6px;
+  margin: 15px;
   background-color: #CFD8DC;
   border-radius: 3px;
   font-family: 'Roboto Mono', monospace;
@@ -103,4 +104,8 @@ code:hover {
   background-color: #B0BEC5;
   cursor: pointer;
   position: relative;
+}
+
+.mdc-data-table__header-cell {
+  font-weight: bold;
 }

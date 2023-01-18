@@ -1,0 +1,35 @@
+- version: global
+  phases:
+    pre:
+    - title: update devenv-4-iom version
+      id: global_1
+      instructions: |
+        Update your copy of devenv-4-iom to the latest version.
+
+        // **TODO**: add step to update properties
+
+        ```
+        git subtree pull --prefix devenv-4-iom git@github.com:intershop/iom-devenv.git main --squash
+        git push
+        ```
+      component: devenv
+    during:
+    - title: update IOM version
+      id: global_2
+      instructions: |
+        Open _pom.xml_ and update _platform.version_ and _wildfly.version_ properties to 
+        _${iomToVersion}_ / _${wildflyVersion} respectively.
+        ```xml
+        <platform.version>${iomToVersion}</platform.version>
+        <wildfly.version>${wildflyVersion}</wildfly.version>
+        ```
+      component: archetype
+    after:
+    - title: apply database fix
+      id: 4.4.0_3
+      instructions: |
+        nuke everything because of reasons
+        ```
+        DROP DATABASE yolo;
+        ```
+      component: database
