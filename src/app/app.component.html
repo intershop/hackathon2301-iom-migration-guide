@@ -134,6 +134,7 @@
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
         <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
       </mat-table>
+      <p>&nbsp;</p>
 
       <h4>Is a downtime required during the deployment?</h4>
       <div>
@@ -143,6 +144,7 @@
         </mat-chip-listbox>
       </div>
       <p><em><b>Note:</b> This only applies to migration scripts applied by the IOM platform. </em></p>
+      <p>&nbsp;</p>
     </div>
     <div *ngIf="allInstructions.phases.during.length > 0">
       <h4>Migration steps to be performed in the code</h4>

@@ -56,12 +56,14 @@ mat-toolbar .page-title {
 code {
   font-size: 14px;
   line-height: 1.5;
-  padding: 10px 6px;
-  margin: 15px;
+  /*padding: 10px 6px;
+  margin: 15px;*/
   background-color: #CFD8DC;
   border-radius: 3px;
   font-family: 'Roboto Mono', monospace;
   display: inline-block;
+  margin: 0px;
+  padding: 0px;
 }
 
 /**
@@ -71,9 +73,9 @@ code {
  * just add a directive and have to do this instead.
  */
 
-/** After element uses a mask to allow for the icon color change */
-code:hover:after,
-  /** Before element is only needed for the background */
+/** After element uses a mask to allow for the icon color change
+code:hover:after, */
+  /** Before element is only needed for the background 
 code:hover:before {
   background: rgba(255, 255, 255, 0.9);
   content: "";
@@ -86,10 +88,10 @@ code:hover:before {
 }
 
 code:hover:after {
-  background: rgba(0, 0, 0, 0.5) no-repeat;
+  background: rgba(0, 0, 0, 0.5) no-repeat;*/
   /* This is a material `content_copy` icon
    *  https://material.io/resources/icons/?search=copy&icon=content_copy&style=baseline
-   */
+   
   mask-image: url("assets/content_copy-24px.svg");
   mask-position: 4px 2px;
   mask-repeat: no-repeat;
@@ -101,11 +103,15 @@ code:hover:active:after {
 }
 
 code:hover {
-  background-color: #B0BEC5;
+  background-color: #B0BEC5;/*
   cursor: pointer;
   position: relative;
 }
-
+*/
 .mdc-data-table__header-cell {
   font-weight: bold;
+}
+
+ol {
+  margin-left: 30px; 
 }

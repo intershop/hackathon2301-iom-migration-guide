@@ -2,6 +2,7 @@
   requireDowntime: true
   wildflyVersion: 27.0.1.Final
   postgresqlVersions: 11.X - 15.X
+  iomHelmVersion: "2.3.0"
   phases:
     pre:
     - title: create missing database index
@@ -14,10 +15,22 @@
         ```
       component: database
     during:
-    - title: update stuff from archetype
+    - title: Hibernate 6 - Queries and persistence.xml
       id: 4.4.0_2
       instructions: |
-        lirum larum löffelstiel, perform some additional stuff
+        **Hibernate 6 - Queries and persistence.xml**
+
+        Open your persistence.xml file:
+
+        1. Ensure that no property still uses the javax. namespace - otherwise change this to Jakarta.
+        2. Remove the `hibernate.dialect` property. The new version works better with autodetection.
+        3. When using non jpa-compliant, hibernate specific (HQL) features, you can set `hibernate.jpa.compliance.query` to `false` to restore the old behavior of lenient validation.
+        4. Native queries that formerly returned `BigInteger` will now return `Long` objects
+        5. Native queries that formerly returned `Timestamp` java objects for `Timestamp with Timezone` columns might return `Instant` now.
+           However, in most cases IOM uses `Timestamp without Timezone`. Specific database functions that return 
+           timezone information (like `now()`) can be cast to `::timestamp` to restore the old behavior.
+        6. Intershop recommends to test all code involving custom entities and queries due to the numerous changes in Hibernate 6.x.
+        
       component: archetype
     after:
     - title: apply database fix
@@ -30,6 +43,7 @@
 - version: 4.5.0
   wildflyVersion: 28.0.1.Final
   postgresqlVersions: 12.X - 15.X
+  iomHelmVersion: "2.3.0"
   phases:
     pre:
     - title: create missing database index

@@ -22,6 +22,9 @@
                 "postgresqlVersions": {
                     "type": "string"
                 },
+                "iomHelmVersion": {
+                    "type": "string"
+                },
                 "phases": {
                     "$ref": "#/definitions/MigrationPhases"
                 }

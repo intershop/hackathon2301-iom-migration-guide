@@ -26,6 +26,7 @@ export class MigrationTarget {
   version: string;
   wildflyVersion: string;
   postgresqlVersions: string;
+  iomHelmVersion: string;
   requireDowntime = false;
   phases: MigrationPhases = new MigrationPhases();
 

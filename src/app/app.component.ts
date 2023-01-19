@@ -2,8 +2,8 @@ import { Component, HostListener, ViewChild } from '@angular/core';
 import { MigrationTarget, MigrationStep } from './models';
 import { Location } from '@angular/common';
 import { Clipboard } from '@angular/cdk/clipboard';
-import  { Pair, parse as parseYaml }  from 'yaml';
-import  { HttpClient } from '@angular/common/http';
+import { Pair, parse as parseYaml } from 'yaml';
+import { HttpClient } from '@angular/common/http';
 import { SemVer, compare as semverCmp } from 'semver';
 import { MatTable } from '@angular/material/table';
 import { forkJoin } from 'rxjs';
@@ -45,7 +45,7 @@ export class AppComponent {
   ];
   from = this.versions[1];
   to = this.versions[0];
-//  futureVersion = 1600
+
   /**
    * Only save the locale in the URL if it was already there, or the user changed it
    */
@@ -73,11 +73,11 @@ export class AppComponent {
       this.to = this.versions.find((version) => version.version === to);
     }
 
-    forkJoin([httpClient.get('assets/migrate.yaml', {responseType: 'text'}),
-    httpClient.get('assets/global_steps.yaml', {responseType: 'text'})]).subscribe(([migrateSteps, globalMigrateSteps]) => {
+    forkJoin([httpClient.get('assets/migrate.yaml', { responseType: 'text' }),
+    httpClient.get('assets/global_steps.yaml', { responseType: 'text' })]).subscribe(([migrateSteps, globalMigrateSteps]) => {
       this.newRecomms = <MigrationTarget[]>parseYaml(migrateSteps);
       // sort in ascending order
-      this.newRecomms.sort((a,b) => semverCmp(a.version, b.version));
+      this.newRecomms.sort((a, b) => semverCmp(a.version, b.version));
       this.globalRecomms = (<MigrationTarget[]>parseYaml(globalMigrateSteps))[0];
       this.showUpdatePath();
     });
@@ -86,7 +86,7 @@ export class AppComponent {
   }
 
   @HostListener('click', ['$event.target'])
-  copyCode({tagName, textContent}) {
+  copyCode({ tagName, textContent }) {
     if (tagName === 'CODE') {
       this.clipboard.copy(textContent);
     }
@@ -99,7 +99,7 @@ export class AppComponent {
   }
 
   renderSteps(steps: MigrationStep[]) {
-    if(steps == null || steps.length < 1) {
+    if (steps == null || steps.length < 1) {
       return;
     }
     steps.forEach(step => {
@@ -123,108 +123,52 @@ export class AppComponent {
     const labelTitle = 'Guide to update IOM';
 
     this.title =
-    `${labelTitle} v${this.from.version} -> v${this.to.version}`;
+      `${labelTitle} v${this.from.version} -> v${this.to.version}`;
     let curVersion: SemVer;
 
-    // FIXME refactor...
+    this.allInstructions.phases.pre.push(...(this.globalRecomms.phases.pre || []));
+    this.allInstructions.phases.during.push(...(this.globalRecomms.phases.during || []));
+    this.allInstructions.phases.after.push(...(this.globalRecomms.phases.after || []));
 
-    if(this.globalRecomms.phases.pre)
-    {
-      this.allInstructions.phases.pre.push(...this.globalRecomms.phases.pre);
-    }
-
-    if(this.globalRecomms.phases.during)
-    {
-      this.allInstructions.phases.during.push(...this.globalRecomms.phases.during);
-    }
-
-    if(this.globalRecomms.phases.after)
-    {
-      this.allInstructions.phases.after.push(...this.globalRecomms.phases.after);
-    }
-
-    
     for (const migrationVersion of this.newRecomms) {
       curVersion = new SemVer(migrationVersion.version);
-      if(curVersion.compare(this.from) <= 0) {
+      if (curVersion.compare(this.from) <= 0) {
         continue;
       }
-      if(curVersion.compare(this.to) > 0) {
+      if (curVersion.compare(this.to) > 0) {
         break;
       }
 
       this.allInstructions.updateRequireDowntime(migrationVersion.requireDowntime);
       this.allInstructions.postgresqlVersions = migrationVersion.postgresqlVersions;
       this.allInstructions.wildflyVersion = migrationVersion.wildflyVersion;
+      this.allInstructions.iomHelmVersion = migrationVersion.iomHelmVersion;
 
       const arraysToSort: Pair<MigrationStep[], MigrationStep[]>[] = [];
 
-      arraysToSort.push(new Pair(migrationVersion.phases.pre, this.allInstructions.phases.pre), 
-        new Pair(migrationVersion.phases.during, this.allInstructions.phases.during), 
+      arraysToSort.push(new Pair(migrationVersion.phases.pre, this.allInstructions.phases.pre),
+        new Pair(migrationVersion.phases.during, this.allInstructions.phases.during),
         new Pair(migrationVersion.phases.after, this.allInstructions.phases.after));
 
       arraysToSort.forEach(pair => {
-        if(pair.key != null) {
+        if (pair.key != null) {
           pair.key.forEach(step => {
             pair.value.push(step);
-            if(step.replaces != null) {
+            if (step.replaces != null) {
               this.stepsToSkip.push(step.replaces);
             }
             step.renderedInstructions = this.md.render(this.replaceVariables(step.instructions));
-          })  
+          })
         }
       });
     }
-    this.versionTable.push(<Dependency>{component: 'PostgreSQL', version: this.allInstructions.postgresqlVersions},
-          <Dependency>{component: 'WildFly', version: this.allInstructions.wildflyVersion});
+    this.versionTable.push({ component: 'PostgreSQL', version: this.allInstructions.postgresqlVersions },
+      { component: 'WildFly', version: this.allInstructions.wildflyVersion },
+      { component: 'IOM Helm Charts (min. Version)', version: this.allInstructions.iomHelmVersion });
     this.parameterMap.iomToVersion = this.to.version;
     this.parameterMap.wildflyVersion = this.allInstructions.wildflyVersion;
+    this.parameterMap.iomHelmVersion = this.allInstructions.iomHelmVersion;
     this.renderTarget(this.globalRecomms);
-
-    console.log(this.allInstructions)
-
-    //this.requirementsTable.renderRows();
-
-
-/*
-    // Find applicable steps and organize them into before, during, and after upgrade
-    for (const step of this.steps) {
-      if (step.level <= this.level && step.necessaryAsOf > this.from.number) {
-        // Check Options
-        // Only show steps that don't have a required option
-        // Or when the user has a matching option selected
-        let skip = false;
-        for (const option of this.optionList) {
-          // Skip steps which require an option not set by the user.
-          if (step[option.id] && !this.options[option.id]) {
-            skip = true;
-          }
-
-          // Skip steps which require **not** using an option which **is** set
-          // by the user.
-          if (step[option.id] === false && this.options[option.id]) {
-            skip = true;
-          }
-        }
-        if (skip) {
-          continue;
-        }
-
-        // Render and replace variables
-        step.renderedStep = snarkdown(this.replaceVariables(getLocalizedAction(currentLocale.locale, step)));
-
-        // If you could do it before now, but didn't have to finish it before now
-        if (step.possibleIn <= this.from.number && step.necessaryAsOf >= this.from.number) {
-          this.beforeRecommendations.push(step);
-          // If you couldn't do it before now, and you must do it now
-        } else if (step.possibleIn > this.from.number && step.necessaryAsOf <= this.to.number) {
-          this.duringRecommendations.push(step);
-        } else if (step.possibleIn <= this.to.number) {
-          this.afterRecommendations.push(step);
-        } else {
-        }
-      }
-    }*/
 
     // Update the URL so users can link to this transition
     const searchParams = new URLSearchParams();
