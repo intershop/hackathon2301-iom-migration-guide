@@ -18,7 +18,7 @@
       id: global_2
       instructions: |
         Open _pom.xml_ and update _platform.version_ and _wildfly.version_ properties to 
-        _${iomToVersion}_ / _${wildflyVersion} respectively.
+        _${iomToVersion}_ / _${wildflyVersion}_ respectively.
         ```xml
         <platform.version>${iomToVersion}</platform.version>
         <wildfly.version>${wildflyVersion}</wildfly.version>
