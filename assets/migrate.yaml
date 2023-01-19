@@ -1,0 +1,61 @@
+- version: 4.4.0  
+  requireDowntime: true
+  wildflyVersion: 27.0.1.Final
+  postgresqlVersions: 11.X - 15.X
+  phases:
+    pre:
+    - title: create missing database index
+      id: 4.4.0_1
+      instructions: |
+        In order to speed up the migration process please connect to the database and execute the following script:
+        
+        ```sql
+        CREATE INDEX CONCURRENTLY testindex ON TESTTABLE(testcolumn);
+        ```
+      component: database
+    during:
+    - title: update stuff from archetype
+      id: 4.4.0_2
+      instructions: |
+        lirum larum löffelstiel, perform some additional stuff
+      component: archetype
+    after:
+    - title: apply database fix
+      id: 4.4.0_3
+      instructions: |
+        nuke everything because of reasons
+
+        `DROP DATABASE yolo;`
+      component: database
+- version: 4.5.0
+  wildflyVersion: 28.0.1.Final
+  postgresqlVersions: 12.X - 15.X
+  phases:
+    pre:
+    - title: create missing database index
+      id: 4.5.0_1
+      replaces: 4.4.0_1
+      instructions: |
+        In order to speed up the migration process please connect to the database and execute the following script:
+        ```
+        CREATE INDEX CONCURRENTLY testindex2 ON TESTTABLE(testcolumn);
+        ```
+      component: database
+    during: []
+    after: []
+- version: 3.5.0
+  requireDowntime: true
+  phases:
+    pre:
+    - title: create missing database index
+      id: 4.5.0_1
+      replaces: 4.4.0_1
+      instructions: |
+        Stuff stuff stuff:
+        
+        ```
+        another pointless <code> block
+        ```
+      component: database
+    during: []
+    after: []
