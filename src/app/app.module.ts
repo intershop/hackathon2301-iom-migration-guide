@@ -12,11 +12,12 @@ import { MatListModule } from '@angular/material/list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
-import { Location, LocationStrategy, PathLocationStrategy } from '@angular/common';
+import { APP_BASE_HREF, Location, LocationStrategy, PathLocationStrategy } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import {MatChipsModule} from '@angular/material/chips'; 
 import { MatTableModule } from '@angular/material/table';
 import { I18nPipe } from './i18n.pipe';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [AppComponent, I18nPipe],
@@ -37,7 +38,8 @@ import { I18nPipe } from './i18n.pipe';
     MatChipsModule,
     MatTableModule
   ],
-  providers: [Location, { provide: LocationStrategy, useClass: PathLocationStrategy }],
+  providers: [Location, { provide: LocationStrategy, useClass: PathLocationStrategy },
+     {provide: APP_BASE_HREF, useValue: environment.baseHref}],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
