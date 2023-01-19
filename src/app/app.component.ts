@@ -21,7 +21,7 @@ interface Dependency {
   providers: []
 })
 export class AppComponent {
-  title = 'Angular Update Guide';
+  title = 'IOM Update Guide';
 
 
   versionTable: Dependency[] = [];
@@ -103,7 +103,6 @@ export class AppComponent {
       return;
     }
     steps.forEach(step => {
-      console.log(this.replaceVariables(step.instructions));
       step.renderedInstructions = this.md.render(this.replaceVariables(step.instructions));
     })
   }
@@ -179,26 +178,6 @@ export class AppComponent {
     this.location.replaceState('', searchParams.toString());
   }
 
-  getAdditionalDependencies(version: number) {
-    if (version < 500) {
-      return `typescript@'>=2.1.0 <2.4.0'`;
-    } else if (version < 600) {
-      return `typescript@2.4.2 rxjs@^5.5.2`;
-    } else {
-      return `typescript@2.7.x rxjs@^6.0.0`;
-    }
-  }
-  getAngularVersion(version: number) {
-    if (version < 400) {
-      return `'^2.0.0'`;
-    } else {
-      const major = Math.floor(version / 100);
-      const minor = Math.floor((version - major * 100) / 10);
-      return `^${major}.${minor}.0`;
-    }
-  }
-
-
   replaceVariables(action: string) {
     let newAction = action;
     newAction = newAction.replace(/\${\w+}/g, rpl => this.replacer(rpl, this.parameterMap));
@@ -212,11 +191,6 @@ export class AppComponent {
 
   getVersion(newVersion: string) {
     return this.versions.find((version) => version.version === newVersion);
-  }
-
-  log(x) {
-    console.log(x);
-    return x;
   }
 
   setLocale(locale: string) {

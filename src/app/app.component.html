@@ -41,7 +41,7 @@
 
         <mat-card-content>
 
-          <h3>{{'Angular versions'|i18n}}</h3>
+          <h3>{{'IOM versions'|i18n}}</h3>
           {{'From'|i18n}} v.
           <mat-form-field appearance="outline">
             <select (change)="from = getVersion($event.target.value); showUpdatePath()" placeholder="from" matNativeControl>
@@ -56,9 +56,9 @@
             </select>
           </mat-form-field>
         </span>
+        <ng-container *ngIf="false">
 
           <h3>{{'Application complexity'|i18n}}</h3>
-          <ng-container *ngIf="false">
               <mat-button-toggle-group (change)="level = $event.value; showUpdatePath()" [value]="level" style="margin-bottom:16px;">
                 <mat-button-toggle [value]="1">{{'Basic'|i18n}}</mat-button-toggle>
                 <mat-button-toggle [value]="2">{{'Medium'|i18n}}</mat-button-toggle>
@@ -68,9 +68,9 @@
               <p *ngIf="level === 2">{{'Shows information that\'s of interest to more advanced Angular developers.'|i18n}}</p>
               <p *ngIf="level === 3">{{'Shows all the information we have about this update.'|i18n}}</p>
             </ng-container>
+            <ng-container *ngIf="false">
 
           <h3>{{'Other dependencies'|i18n}}</h3>
-          <ng-container *ngIf="false">
 
           <ng-container *ngFor="let option of optionList">
             <p>
