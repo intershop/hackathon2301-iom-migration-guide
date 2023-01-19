@@ -32,7 +32,7 @@ jobs:
       run: yarn install
 
     - name: Build with prod profile
-      run: ng build --configuration production --aot
+      run: yarn run build:prod
 
     - name: Deploy
       if: success()
