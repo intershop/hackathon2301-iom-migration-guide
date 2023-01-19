@@ -1,4 +1,4 @@
-- version: 4.4.0
+- version: 4.4.0  
   requireDowntime: true
   wildflyVersion: 27.0.1.Final
   postgresqlVersions: 11.X - 15.X
@@ -41,8 +41,8 @@
         CREATE INDEX CONCURRENTLY testindex2 ON TESTTABLE(testcolumn);
         ```
       component: database
-    during:
-    after:
+    during: []
+    after: []
 - version: 3.5.0
   requireDowntime: true
   phases:
@@ -57,5 +57,5 @@
         another pointless <code> block
         ```
       component: database
-    during:
-    after:
+    during: []
+    after: []

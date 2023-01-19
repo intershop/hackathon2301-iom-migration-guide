@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, HostListener, ViewChild } from '@angular/core';
 import { MigrationTarget, MigrationStep } from './models';
 import { Location } from '@angular/common';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -6,9 +6,8 @@ import  { Pair, parse as parseYaml }  from 'yaml';
 import  { HttpClient } from '@angular/common/http';
 import { SemVer, compare as semverCmp } from 'semver';
 import { MatTable } from '@angular/material/table';
-import { forkJoin, Observable, Subscription } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import * as MarkdownIt from 'markdown-it';
-import { RouteConfigLoadEnd } from '@angular/router';
 
 
 interface Dependency {
@@ -36,7 +35,7 @@ export class AppComponent {
   newRecomms: MigrationTarget[] = [];
   allInstructions: MigrationTarget = new MigrationTarget();
   stepsToSkip: string[] = [];
-  parameterMap: any = {};
+  parameterMap: Record<string, string> = {};
 
   versions: SemVer[] = [
     ver('4.5.0'),
@@ -158,7 +157,7 @@ export class AppComponent {
       this.allInstructions.postgresqlVersions = migrationVersion.postgresqlVersions;
       this.allInstructions.wildflyVersion = migrationVersion.wildflyVersion;
 
-      let arraysToSort: Pair<MigrationStep[], MigrationStep[]>[] = [];
+      const arraysToSort: Pair<MigrationStep[], MigrationStep[]>[] = [];
 
       arraysToSort.push(new Pair(migrationVersion.phases.pre, this.allInstructions.phases.pre), 
         new Pair(migrationVersion.phases.during, this.allInstructions.phases.during), 
@@ -262,8 +261,8 @@ export class AppComponent {
     return newAction;
   }
 
-  replacer(substring: string, parameterMap: any) {
-    let key = substring.match(/\${(\w+)}/)[1];
+  replacer(substring: string, parameterMap: Record<string, string>) {
+    const key = substring.match(/\${(\w+)}/)[1];
     return parameterMap[key];
   }
 

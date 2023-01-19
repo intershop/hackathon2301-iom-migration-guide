@@ -1,0 +1,51 @@
+{
+  "root": true,
+  "ignorePatterns": [
+    "projects/**/*"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts"
+      ],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates"
+      ],
+      "rules": {}
+    },
+    {
+      "files": [
+        "*.html"
+      ],
+      "extends": [
+        "plugin:@angular-eslint/template/recommended"
+      ],
+      "rules": {}
+    },
+    {
+      "files": [
+        "migrate.yaml", "global-steps.yaml"
+      ],
+      "extends": [
+        "plugin:json-schema-validator/recommended"
+      ],
+      "rules": {
+        "json-schema-validator/no-invalid": [
+          "error",
+          {
+              "schemas": [
+                  {
+                      "fileMatch": ["migrate.yaml", "global-steps.yaml"],
+                      "schema": "migration-schema.json"
+                  }
+              ]
+          }
+        ]
+      }
+  
+    }
+  ]
+}

@@ -26,7 +26,7 @@ export class MigrationTarget {
   version: string;
   wildflyVersion: string;
   postgresqlVersions: string;
-  requireDowntime: boolean = false;
+  requireDowntime = false;
   phases: MigrationPhases = new MigrationPhases();
 
   updateRequireDowntime(downtime: boolean): void {
